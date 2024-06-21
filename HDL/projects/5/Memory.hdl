@@ -23,7 +23,18 @@
 CHIP Memory {
     IN in[16], load, address[15];
     OUT out[16];
+    
+    // 000 0000 0000 0000 thru 0111 1111 1111 1111 -> memory
+    // 100 0000 0000 0000 thru 1011 1111 1111 1111 -> screen
+    // 110 0000 0000 0000                          -> keyboard
+    // 110 0000 0000 0001 thru 1111 1111 1111 1111 -> nonexistent
 
     PARTS:
-	//// Replace this comment with your code.
+	DMux4Way(in=load,sel=address[13..14],a=ramlow,b=ramhigh,c=scrn,d=kybd);
+    Or(a=ramlow,b=ramhigh,out=ram);
+    RAM16K(in=in,load=ram,address=address[0..13],out=outdata); // Data memory - 16k
+    Screen(in=in,load=scrn,address=address[0..12],out=outscrn); // Screen memory - 8k
+    Keyboard(out=outkybd); // Keyboard memory - 1 word
+    
+    Mux4Way16(a=outdata,b=outdata,c=outscrn,d=outkybd,sel=address[13..14],out=out);
 }

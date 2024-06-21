@@ -32,5 +32,51 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-	//// Replace this comment with your code.
+    ////////////////////////////////////////////////////////////////
+	//// First decode the instruction opcode, and output all necessary control bits
+    ////////////////////////////////////////////////////////////////
+    
+    // A-register control
+    Not(in=instruction[15],out=ainstr); // If leading bit is zero, we have an A-instruction and we store the instruction into the A register
+    And(a=instruction[15],b=instruction[5],out=desta); // If leading bit is 1, we have a C-instruction and will store the ALU output in the A register if the d1 bit is set to 1
+    Or(a=ainstr,b=desta,out=loada); // If we have an A-instruction or are outputting a C-instruction to the A-register, then use this bit to load a value into the A-register
+    
+    // D-register control
+    And(a=instruction[15],b=instruction[4],out=loadd); // If leading bit is 1, we have a C-instruction and will store the ALU output in the D register if the d3 bit is set to 1
+    
+    // M-register control
+    And(a=instruction[15],b=instruction[3],out=writeM); // If leading bit is 1, we have a C-instruction and will store the ALU output in the M register if the d2 bit is set to 1
+    
+    // Jump instruction control
+    And(a=instruction[2],b=aluneg,out=j1true);  // If j1==1 and out<0
+    And(a=instruction[1],b=aluzero,out=j2true); // If j2==1 and out==0
+    Or(a=aluneg,b=aluzero,out=alunotpos);
+    Not(in=alunotpos,out=alupos); // out>0
+    And(a=instruction[0],b=alupos,out=j3true); // If j3==1 and out>0
+    Or(a=j1true,b=j2true,out=j1j2true);    
+    Or(a=j1j2true,b=j3true,out=j1j2j3true); // Check if jump conditions are satisfied
+    And(a=j1j2j3true,b=instruction[15],out=jmptrue); // Only jump if jump conditions are met, and if instruction is a C-instruction
+    
+    
+    ////////////////////////////////////////////////////////////////
+    //// Now implement all gate logic, using chip inputs and the output of our decoder logic
+    ////////////////////////////////////////////////////////////////
+    
+    // A register
+    Mux16(a=outalu,b=instruction,sel=ainstr,out=inrega);
+    ARegister(in=inrega,load=loada,out=outrega,out[0..14]=addressM);
+    
+    // A/M register input into ALU
+    Mux16(a=outrega,b=inM,sel=instruction[12],out=outregam); // If the A bit is 0 we use value in A register, if it is 1 we use value in M register
+    
+    // D register
+    DRegister(in=outalu,load=loadd,out=outregd);
+    
+    // ALU
+    // There is no need to restrict the ALU to only operate when the leading opcode bit is 1, since this isn't physical hardware and we don't care about power consumption
+    ALU(x=outregd,y=outregam,zx=instruction[11],nx=instruction[10],zy=instruction[9],ny=instruction[8],f=instruction[7],no=instruction[6],out=outalu,out=outM,zr=aluzero,ng=aluneg);
+    
+    // PC
+    PC(in=outrega,inc=true,load=jmptrue,reset=reset,out[0..14]=pc); // Since incrementing the counter has the lowest priority, it can be set to always be true
+    
 }
