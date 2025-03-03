@@ -1,0 +1,64 @@
+// function Sys.init 0
+(Sys.init)
+// push constant 4
+@4
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+// call Main.fibonacci 1
+@Main.fibonacci$ret_Sys_0
+D=A
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@LCL
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@ARG
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@THIS
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@THAT
+D=M
+@SP
+A=M
+M=D
+@SP
+M=M+1
+@6
+D=A
+@SP
+D=M-D
+@ARG
+M=D
+@SP
+D=M
+@LCL
+M=D
+@Main.fibonacci
+0;JMP
+(Main.fibonacci$ret_Sys_0)
+// label END
+(Main.fibonacci$END)
+// goto END
+@Main.fibonacci$END
+0;JMP

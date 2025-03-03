@@ -151,6 +151,7 @@ for line_orig in fid_in:
 
     line = re.sub('//.*','',line_orig)    # Remove comments
     line = re.sub('[\s\r\n]','',line)    # Remove whitespace
+    line = line.strip()    # Remove leading and trailing spaces
 
     if loop_label_re.search(line):   # if loop label, do nothing
         pass
@@ -206,4 +207,3 @@ for line_orig in fid_in:
             sys.exit('Exiting...')
 
 fid_out.close()
-
